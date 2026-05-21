@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>韓國旅行分帳+即時匯率 🇰🇷✈️</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 15px;
+            color: #333;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        h2, h3 {
+            text-align: center;
+            color: #2d3748;
+            margin-top: 0;
+        }
+        .section-title {
+            background: #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: bold;
+            margin-top: 20px;
+            color: #4a5568;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        .row-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .row-group .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 13px;
+            color: #4a5568;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2);
+        }
+        button {
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 5px;
+            transition: background 0.2s;
+        }
+        button:active {
+            background-color: #2b6cb0;
+        }
+        .btn-secondary {
+            background-color: #4a5568;
+        }
+        .btn-secondary:active {
+            background-color: #2d3748;
+        }
+        .btn-api {
+            background-color: #38a169;
+            margin-top: 22px;
+            font-size: 14px;
+            padding: 11px;
+        }
+        .btn-api:active {
+            background-color: #2f855a;
+        }
+        .btn-edit-mode {
+            background-color: #dd6b20;
+        }
+        .btn-edit-mode:active {
+            background-color: #c05621;
+        }
+        .btn-delete {
+            background: none;
+            color: #e53e3e;
+            border: none;
+            padding: 10px;
+            width: auto;
+            margin: 0;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: normal;
+        }
+        .btn-delete:hover {
+            text-decoration: underline;
+        }
+        .converter-box {
+            background: #fffaf0;
+            border: 1px solid #feebc8;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .history-list {
+            margin-top: 10px;
+            max-height: 180px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 5px;
+            background: #f7fafc;
+        }
+        .history-item {
+            background: white;
+            padding: 4px 12px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #edf2f7;
+            cursor: pointer;
+        }
+        .history-item:hover {
+            background: #edf2f7;
+        }
+        .item-clickable {
+            flex: 1;
+            padding: 6px 0;
+        }
+        .result-box {
+            background: #ebf8ff;
+            border-left: 4px solid #3182ce;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+        .result-item {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2b6cb0;
+            margin: 5px 0;
+        }
+        .clear-all {
+            font-size: 11px;
+            color: #e53e3e;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🇰🇷 韓國旅行全能助手</h2>
+    
+    <!-- 1. 匯率換算器 -->
+    <div class="converter-box">
+        <label style="color: #dd6b20; font-size: 14px;">⚡ 即時匯率換算 (可自訂或連網更新)</label>
+        <div class="row-group" style="margin-top: 8px;">
+            <div class="form-group" style="flex: 1.5;">
+                <label>1 HKD 兌換 韓幣 (KRW)</label>
+                <input type="number" id="rateInput" value="191" oninput="convertCurrency('rate')">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <button type="button" class="btn-api" onclick="fetchLiveRate()">更新匯率 🌐</button>
+            </div>
+        </div>
+        <div class="row-group">
+            <div class="form-group">
+                <label>韓幣金額 (KRW ₩)</label>
+                <input type="number" id="krwInput" placeholder="例如: 35000" oninput="convertCurrency('krw')">
+            </div>
+            <div class="form-group">
+                <label>港幣約值 (HKD $)</label>
+                <input type="number" id="hkdInput" placeholder="自動計算" oninput="convertCurrency('hkd')">
+            </div>
+        </div>
+        <button type="button" class="btn-secondary" onclick="pushToLedge()">帶入下方記帳欄 📥</button>
+    </div>
+
+    <!-- 2. 成員設定 -->
+    <div class="form-group">
+        <label>旅行成員 (用逗號隔開):</label>
+        <input type="text" id="membersInput" value="Alex, Bob, Chris" onchange="updateMembers()">
+    </div>
+
+    <!-- 3. 新增/修改消費 -->
+    <div class="section-title" id="formTitle">📝 新增消費紀錄</div>
+    <div class="form-group" style="margin-top: 10px;">
+        <label>項目名稱 (點擊格內可快速選分類 / 亦可直接打字):</label>
+        <!-- 使用 list 屬性綁定下方的 datalist 清單 -->
+        <input type="text" id="itemInput" list="categoryOptions" placeholder="例如: 餐廳食肆 / 明洞炸雞">
+        
+        <!-- 快速分類下拉清單清單 -->
+        <datalist id="categoryOptions">
+            <option value="餐廳食肆 🍗">
+            <option value="交通車費 🚇">
+            <option value="購物血拼 🛍️">
+            <option value="景點玩樂 🎡">
+            <option value="酒店住宿 🏨">
+            <option value="雜項其他 🪙">
+        </datalist>
+    </div>
+    <div class="row-group">
+        <div class="form-group">
+            <label>金額 (₩ KRW):</label>
+            <input type="number" id="amountInput" placeholder="韓幣金額">
+        </div>
+        <div class="form-group">
+            <label>邊個俾錢？</label>
+            <select id="payerSelect"></select>
+        </div>
+    </div>
+    
+    <input type="hidden" id="editingId" value="">
+    <button id="submitBtn" onclick="handleRecordSubmit()">記低一筆 📌</button>
+
+    <!-- 4. 消費歷史 -->
+    <div class="section-title">
+        <span>📋 消費歷史 (點擊紀錄可修改)</span>
+        <span class="clear-all" onclick="clearAllRecords()">清空全部🗑️</span>
+    </div>
+    <div id="historyList" class="history-list"></div>
+
+    <!-- 5. 結算結果 -->
+    <div class="result-box">
+        <h3>💰 最終分帳（邊個爭邊個）</h3>
+        <div id="settlementResult">輸入資料後會自動計算...</div>
+    </div>
+</div>
+
+<script>
+    let records = JSON.parse(localStorage.getItem('korea_records')) || [];
+    let members = [];
+
+    // 連網獲取最新即時匯率
+    async function fetchLiveRate() {
+        const btn = document.querySelector('.btn-api');
+        btn.innerText = "更新中...";
+        btn.disabled = true;
+        try {
+            const response = await fetch('https://open.er-api.com/v6/latest/HKD');
+            const data = await response.json();
+            if (data && data.rates && data.rates.KRW) {
+                const liveRate = data.rates.KRW;
+                document.getElementById('rateInput').value = liveRate.toFixed(2);
+                alert(`成功獲取最新匯率！\n現時 1 HKD = ${liveRate.toFixed(2)} KRW`);
+                convertCurrency('rate');
+                renderHistory();
+                calculateSettlement();
+            } else {
+                alert('未能成功解析匯率數據，請稍後再試。');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('網絡不穩或無法連線，請手動輸入匯率。');
+        } finally {
+            btn.innerText = "更新匯率 🌐";
+            btn.disabled = false;
+        }
+    }
+
+    // 匯率換算邏輯
+    function convertCurrency(source) {
+        const rate = parseFloat(document.getElementById('rateInput').value) || 191;
+        const krwInput = document.getElementById('krwInput');
+        const hkdInput = document.getElementById('hkdInput');
+
+        if (source === 'krw') {
+            const krw = parseFloat(krwInput.value);
+            if (!isNaN(krw)) hkdInput.value = (krw / rate).toFixed(2);
+            else hkdInput.value = '';
+        } else if (source === 'hkd') {
+            const hkd = parseFloat(hkdInput.value);
+            if (!isNaN(hkd)) krwInput.value = Math.round(hkd * rate);
+            else krwInput.value = '';
+        } else if (source === 'rate') {
+            const krw = parseFloat(krwInput.value);
+            if (!isNaN(krw)) hkdInput.value = (krw / rate).toFixed(2);
+        }
+    }
+
+    // 將換算器的數值帶入記帳欄
+    function pushToLedge() {
+        const krw = document.getElementById('krwInput').value;
+        if (!krw) {
+            alert('請先喺換算器輸入韓幣金額！');
+            return;
+        }
+        document.getElementById('amountInput').value = krw;
+        document.getElementById('itemInput').value = ''; // 清空讓用戶點選分類
+        document.getElementById('itemInput').placeholder = '請點選分類或打字';
+        document.getElementById('itemInput').focus();
+    }
+
+    // 初始化/更新成員
+    function updateMembers() {
+        const input = document.getElementById('membersInput').value;
+        members = input.split(',').map(m => m.trim()).filter(m => m !== '');
+        localStorage.setItem('korea_members', input);
+
+        const select = document.getElementById('payerSelect');
+        select.innerHTML = '';
+        members.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m;
+            opt.innerText = m;
+            select.appendChild(opt);
+        });
+        
+        calculateSettlement();
+    }
+
+    // 分流處理：新增定係修改
+    function handleRecordSubmit() {
+        const item = document.getElementById('itemInput').value.trim();
+        const amount = parseFloat(document.getElementById('amountInput').value);
+        const payer = document.getElementById('payerSelect').value;
+        const editingId = document.getElementById('editingId').value;
+
+        if (!item || isNaN(amount) || amount <= 0) {
+            alert('唔該輸入項目名稱或選擇分類，並輸入正確金額！');
+            return;
+        }
+
+        if (editingId) {
+            const record = records.find(r => r.id == editingId);
+            if (record) {
+                record.item = item;
+                record.amount = amount;
+                record.payer = payer;
+            }
+            document.getElementById('editingId').value = '';
+            document.getElementById('formTitle').innerText = '📝 新增消費紀錄';
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = '記低一筆 📌';
+            btn.classList.remove('btn-edit-mode');
+        } else {
+            const record = { item, amount, payer, id: Date.now() };
+            records.push(record);
+        }
+
+        saveToLocal();
+        renderHistory();
+        calculateSettlement();
+
+        document.getElementById('itemInput').value = '';
+        document.getElementById('amountInput').value = '';
+    }
+
+    // 點擊歷史紀錄觸發編輯
+    function startEditRecord(id) {
+        const record = records.find(r => r.id === id);
+        if (!record) return;
+
+        document.getElementById('itemInput').value = record.item;
+        document.getElementById('amountInput').value = record.amount;
+        document.getElementById('payerSelect').value = record.payer;
+        document.getElementById('editingId').value = record.id;
+
+        document.getElementById('formTitle').innerText = '✏️ 正在修改紀錄...';
+        const btn = document.getElementById('submitBtn');
+        btn.innerText = '儲存修改 💾';
+        btn.classList.add('btn-edit-mode');
+        
+        document.getElementById('itemInput').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // 刪除紀錄
+    function deleteRecord(id, event) {
+        event.stopPropagation();
+        if(confirm("確定要刪除呢筆記帳紀錄嗎？")) {
+            if(document.getElementById('editingId').value == id) {
+                document.getElementById('editingId').value = '';
+                document.getElementById('formTitle').innerText = '📝 新增消費紀錄';
+                const btn = document.getElementById('submitBtn');
+                btn.innerText = '記低一筆 📌';
+                btn.classList.remove('btn-edit-mode');
+            }
+            
+            records = records.filter(r => r.id !== id);
+            saveToLocal();
+            renderHistory();
+            calculateSettlement();
+        }
+    }
+
+    // 清空全部歷史
+    function clearAllRecords() {
+        if(confirm("警告：確定要清空今次旅行所有嘅消費紀錄？")) {
+            records = [];
+            document.getElementById('editingId').value = '';
+            document.getElementById('formTitle').innerText = '📝 新增消費紀錄';
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = '記低一筆 📌';
+            btn.classList.remove('btn-edit-mode');
+            saveToLocal();
+            renderHistory();
+            calculateSettlement();
+        }
+    }
+
+    function saveToLocal() {
+        localStorage.setItem('korea_records', JSON.stringify(records));
+    }
+
+    // 顯示歷史紀錄
+    function renderHistory() {
+        const list = document.getElementById('historyList');
+        list.innerHTML = '';
+        const rate = parseFloat(document.getElementById('rateInput').value) || 191;
+
+        if (records.length === 0) {
+            list.innerHTML = '<div style="text-align:center; color:#a0aec0; padding:10px; font-size:14px;">暫時未有歷史紀錄</div>';
+            return;
+        }
+
+        records.forEach((r) => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.onclick = function() { startEditRecord(r.id); };
+            
+            const hkdApprox = (r.amount / rate).toFixed(1);
+            div.innerHTML = `
+                <div class="item-clickable">
+                    <strong>${r.item}</strong> (${r.payer}付)<br>
+                    <span style="color:#718096; font-size:13px;">₩${r.amount.toLocaleString()} <small>(~$${hkdApprox})</small></span>
+                </div>
+                <button class="btn-delete" onclick="deleteRecord(${r.id}, event)">❌ 刪除</button>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    // 計算清帳
+    function calculateSettlement() {
+        if (records.length === 0 || members.length === 0) {
+            document.getElementById('settlementResult').innerText = "暫時未有消費紀錄。";
+            return;
+        }
+
+        let balances = {};
+        members.forEach(m => balances[m] = 0);
+
+        records.forEach(r => {
+            const payer = r.payer;
+            const eachShare = r.amount / members.length;
+            if(balances[payer] !== undefined) balances[payer] += r.amount;
+            members.forEach(m => {
+                if(balances[m] !== undefined) balances[m] -= eachShare;
+            });
+        });
+
+        let creditors = [];
+        let debtors = [];
+
+        for (let m in balances) {
+            if (balances[m] > 0.1) creditors.push({ name: m, amount: balances[m] });
+            else if (balances[m] < -0.1) debtors.push({ name: m, amount: Math.abs(balances[m]) });
+        }
+
+        let totalSettlements = [];
+        let i = 0, j = 0;
+
+        while (i < debtors.length && j < creditors.length) {
+            let debtor = debtors[i];
+            let creditor = creditors[j];
+            let minAmount = Math.min(debtor.amount, creditor.amount);
+
+            totalSettlements.push({ from: debtor.name, to: creditor.name, amount: Math.round(minAmount) });
+
+            debtor.amount -= minAmount;
+            creditor.amount -= minAmount;
+
+            if (debtor.amount < 0.1) i++;
+            if (creditor.amount < 0.1) j++;
+        }
+
+        const resultDiv = document.getElementById('settlementResult');
+        resultDiv.innerHTML = '';
+        const rate = parseFloat(document.getElementById('rateInput').value) || 191;
+
+        if (totalSettlements.length === 0) {
+            resultDiv.innerText = "大家都啱啱好，邊個都唔爭邊個！";
+        } else {
+            totalSettlements.forEach(s => {
+                const p = document.createElement('div');
+                p.className = 'result-item';
+                const hkdAmt = (s.amount / rate).toFixed(1);
+                p.innerText = `👉 ${s.from} 俾返 ₩${s.amount.toLocaleString()} (~HKD $${hkdAmt}) 俾 ${s.to}`;
+                resultDiv.appendChild(p);
+            });
+        }
+    }
+
+    // 頁面初始化
+    const savedMembers = localStorage.getItem('korea_members');
+    if (savedMembers) document.getElementById('membersInput').value = savedMembers;
+    updateMembers();
+    renderHistory();
+</script>
+
+</body>
+</html>
